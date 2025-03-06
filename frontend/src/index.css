@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import "tailwindcss/utilities";
+
+@layer utilities {
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}
