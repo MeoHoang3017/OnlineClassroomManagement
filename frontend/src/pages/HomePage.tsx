@@ -3,25 +3,8 @@ import React from 'react';
 const HomePage = () => {
     return (
         <div>
-            {/* Navigation Bar */}
-            <nav className="bg-white shadow-md ">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between h-16 items-center">
-                        <div className="flex-shrink-0">
-                            <a href="#" className="text-xl font-bold text-indigo-600">MyWebsite</a>
-                        </div>
-                        <div className="flex space-x-4">
-                            <a href="#" className="text-gray-600 hover:text-indigo-600">Home</a>
-                            <a href="#" className="text-gray-600 hover:text-indigo-600">About</a>
-                            <a href="#" className="text-gray-600 hover:text-indigo-600">Services</a>
-                            <a href="#" className="text-gray-600 hover:text-indigo-600">Contact</a>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
             {/* Hero Section */}
-            <header className="bg-indigo-600 text-white py-16">
+            <header className="bg-blue-700 text-white py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
                     <h1 className="text-4xl font-bold mb-4">Welcome to MyWebsite</h1>
                     <p className="text-lg mb-8">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla accumsan, metus ultrices eleifend gravida.</p>
@@ -46,13 +29,6 @@ const HomePage = () => {
                     </section>
                 </div>
             </main>
-
-            {/* Footer */}
-            <footer className="bg-white shadow-md py-4">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <p className="text-gray-600">&copy; 2025 MyWebsite. All rights reserved.</p>
-                </div>
-            </footer>
         </div>
     );
 };

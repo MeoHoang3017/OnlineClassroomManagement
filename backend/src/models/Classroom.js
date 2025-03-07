@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const classroomSchema = new mongoose.Schema({
+    classCode: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     description: { type: String, required: true },
     students: [{
@@ -10,12 +11,14 @@ const classroomSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now },
 });
 
+classroomSchema.virtual("creator", {
+    ref: "User",
+    localField: "createdBy",
+    foreignField: "_id",
+    justOne: true
+});
+
 const Classroom = mongoose.model('Classroom', classroomSchema);
 
-Classroom.create = async (classroomData) => {
-    const classroom = new Classroom(classroomData);
-    await classroom.save();
-    return classroom;
-}
 
 module.exports = Classroom;

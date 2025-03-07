@@ -2,12 +2,20 @@ import { useState } from 'react';
 import { Button } from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 // AddClassroomModal Component
-const AddClassroomModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose: () => void, onAdd: (name: string, description: string) => void }) => {
+const AddClassroomModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean, onClose: () => void, onAdd: (name: string, description: string, code: string) => void }) => {
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [code, setCode] = useState("");
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Add Classroom">
+            <input
+                type="text"
+                className="border p-2 w-full rounded-md mb-2"
+                placeholder="Enter classroom code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+            />
             <input
                 type="text"
                 className="border p-2 w-full rounded-md mb-2"
@@ -22,11 +30,12 @@ const AddClassroomModal = ({ isOpen, onClose, onAdd }: { isOpen: boolean, onClos
                 onChange={(e) => setDescription(e.target.value)}
             />
             <div className="flex justify-end gap-2">
-                <Button onClick={onClose} variant="secondary">Cancel</Button>
+                <Button onClick={onClose} variant="danger">Cancel</Button>
                 <Button
+                    variant="primary"
                     onClick={() => {
-                        if (!name.trim() || !description.trim()) return;
-                        onAdd(name, description);
+                        if (!name.trim() || !description.trim() || !code) return;
+                        onAdd(name, description, code);
                         setName("");
                         setDescription("");
                         onClose();

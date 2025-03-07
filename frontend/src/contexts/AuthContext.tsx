@@ -25,9 +25,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const token = localStorage.getItem('refreshToken');
         if (token) {
           const data = await authAPI.refreshToken(token);
-          setUser(data.user);
-          localStorage.setItem('accessToken', data.accessToken);
-          localStorage.setItem('refreshToken', data.refreshToken);
+          setUser(data);
         } else {
           setLoading(false);
         }

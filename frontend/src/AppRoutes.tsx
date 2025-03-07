@@ -12,7 +12,7 @@ const AppRoutes = () => {
         <Router>
             <Suspense fallback={<LoadingPage />}>
                 <Routes>
-                    <Route path="/" element={<HomePage />} />
+                    <Route path="/" element={<CommonLayout><HomePage /></CommonLayout>} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/classroom"

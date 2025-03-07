@@ -1,9 +1,9 @@
 const { Classroom } = require('../models/index');
 
 //Get all classrooms
-const getClassrooms = async (req, res) => {
+const getAllClassrooms = async (req, res) => {
     try {
-        const classrooms = await Classroom.find();
+        const classrooms = await Classroom.find().populate('createdBy', 'username');
         res.status(200).json(classrooms);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -23,11 +23,12 @@ const getClassroomById = async (req, res) => {
 //Create a new classroom
 const createClassroom = async (req, res) => {
     try {
-        const { name, description, students } = req.body;
+        const { classCode, name, description } = req.body;
+        const user = req.user;
         if (!name || !description) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
-        const classroom = await Classroom.create({ name, description, students });
+        const classroom = await Classroom.create({ classCode: classCode, name, description, createdBy: user.id });
         res.status(201).json(classroom);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -54,4 +55,26 @@ const deleteClassroom = async (req, res) => {
     }
 }
 
-module.exports = { getClassrooms, getClassroomById, createClassroom, updateClassroom, deleteClassroom };
+//Join a classroom
+const joinClassroom = async (req, res) => {
+    try {
+        const classroom = await Classroom.findById(req.params.id);
+        classroom.users.push(req.user.id);
+        await classroom.save();
+        res.status(200).json(classroom);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+//View students in a classroom
+const viewStudentsInClassroom = async (req, res) => {
+    try {
+        const classroom = await Classroom.findById(req.params.id).populate('users');
+        res.status(200).json(classroom.users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAllClassrooms, getClassroomById, createClassroom, updateClassroom, deleteClassroom, joinClassroom, viewStudentsInClassroom };

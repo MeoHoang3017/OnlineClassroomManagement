@@ -4,15 +4,16 @@ import { ReactNode } from "react";
 interface ButtonProps {
     children: ReactNode;
     onClick: () => void;
-    variant?: "primary" | "secondary" | "danger";
+    variant?: "primary" | "secondary" | "danger" | "success";
 }
 
 export const Button = ({ children, onClick, variant = "primary" }: ButtonProps) => {
-    const baseStyle = "px-4 py-2 rounded text-white focus:outline-none";
+    const baseStyle = "px-4 py-2 rounded text-white focus:outline-none transition-colors duration-300 cursor-pointer";
     const variants = {
-        primary: "bg-blue-500 hover:bg-blue-600",
-        secondary: "bg-gray-500 hover:bg-gray-600",
-        danger: "bg-red-500 hover:bg-red-600",
+        primary: "bg-blue-500 hover:bg-blue-700",
+        secondary: "bg-gray-500 hover:bg-gray-700",
+        danger: "bg-red-500 hover:bg-red-700",
+        success: "bg-green-500 hover:bg-green-700",
     };
 
     return (
@@ -21,3 +22,4 @@ export const Button = ({ children, onClick, variant = "primary" }: ButtonProps) 
         </button>
     );
 };
+

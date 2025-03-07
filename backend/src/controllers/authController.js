@@ -1,3 +1,4 @@
+const e = require('express');
 const { User } = require('../models/index');
 const { hashPassword, isMatch } = require('../utils/Hasher');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/JwtService');
@@ -49,8 +50,8 @@ const login = async (req, res) => {
         const refreshToken = generateRefreshToken(user);
         console.log("AccessToken: ", accessToken);
         console.log("RefreshToken: ", refreshToken)
-        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'Strict' });
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'Strict' });
+        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 60 * 60 * 1000, expires: new Date(Date.now() + 60 * 60 * 1000) });
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 7 * 24 * 60 * 60 * 1000, expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) });
         res.status(200).json({ message: 'Login successful' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -63,16 +64,25 @@ const refreshToken = async (req, res) => {
         if (!refreshToken) {
             return res.status(401).json({ error: 'Refresh token is required' });
         }
+
         const decoded = verifyRefreshToken(refreshToken);
-        const user = await User.findOne({ uid: decoded.id, isBan: false });
+        console.log("Decoded: ", decoded);
+
+        const user = await User.findById(decoded.id);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
         const newAccessToken = generateAccessToken(user);
         const newRefreshToken = generateRefreshToken(user);
-        res.cookie('accessToken', newAccessToken, { httpOnly: true, secure: true, sameSite: 'Strict' });
-        res.cookie('refreshToken', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'Strict' });
-        res.status(200).json({ message: 'Token refreshed' });
+        res.cookie('accessToken', newAccessToken, { httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 60 * 60 * 1000, expires: new Date(Date.now() + 60 * 60 * 1000) });
+        res.cookie('refreshToken', newRefreshToken, { httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 7 * 24 * 60 * 60 * 1000, expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) });
+        const response = {
+            ...user._doc,
+            id: user._id,
+            _id: undefined,
+            password: undefined,
+        }
+        res.status(200).json(response);
     } catch (error) {
         res.status(403).json({ error });
     }
