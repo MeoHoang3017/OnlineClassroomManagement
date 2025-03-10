@@ -3,12 +3,13 @@ import AddClassroomModal from './AddClass';
 import ConfirmDeleteModal from '../../components/common/ConfirmDeleteModal';
 import { Button } from '../../components/common/Button';
 import useClassroom from '../../hooks/useClassroom';
-
+import { useNavigate } from 'react-router-dom';
 const ClassroomManagement = () => {
     const { classes, getAllClasses, createClass, deleteClass } = useClassroom();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [classToDelete, setClassToDelete] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         getAllClasses();
@@ -80,13 +81,13 @@ const ClassroomManagement = () => {
                             </Button>
                             <Button
                                 variant="secondary"
-                                onClick={() => alert("View Classroom")}
+                                onClick={() => navigate(`/classroom/${classroom._id}`)}
                             >
                                 View
                             </Button>
                             <Button
                                 variant="success"
-                                onClick={() => alert("Manage Students")}
+                                onClick={() => navigate}
                             >
                                 Join
                             </Button>

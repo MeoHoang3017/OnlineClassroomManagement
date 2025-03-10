@@ -6,7 +6,7 @@ const LoginPage = lazy(() => import('./pages/Auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/Auth/RegisterPage'));
 const HomePage = lazy(() => import('./pages/HomePage'));
 const ClassroomManagement = lazy(() => import('./pages/Classroom/ManageClass'));
-
+const ClassDetail = lazy(() => import('./pages/Classroom/ClassDetail'));
 const AppRoutes = () => {
     return (
         <Router>
@@ -21,6 +21,7 @@ const AppRoutes = () => {
                                 <ClassroomManagement />
                             </CommonLayout>
                         } />
+                    <Route path="/classroom/:classroomId" element={<CommonLayout><ClassDetail /></CommonLayout>} />
                     <Route path="*" element={<h1>Not Found</h1>} />
                 </Routes>
             </Suspense>
