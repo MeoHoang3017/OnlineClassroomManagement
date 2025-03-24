@@ -22,19 +22,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const token = localStorage.getItem('refreshToken');
-        if (token) {
-          const data = await authAPI.refreshToken(token);
-          setUser(data);
-        } else {
-          setLoading(false);
-        }
+        const data = await userAPI.getCurrentUser();
+        setUser(data);
+        setLoading(false);
       } catch (error) {
         console.error(error);
         setLoading(false);
       }
     };
-
     initializeAuth();
   }, []);
 
@@ -43,9 +38,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await authAPI.login(credentials);
       const userData = await userAPI.getCurrentUser();
       setUser(userData);
+      localStorage.setItem('isAuthenticated', '1');
       window.location.href = '/';
     } catch (error) {
       console.error(error);
+      throw error;
     }
   };
 
@@ -57,16 +54,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('refreshToken', data.refreshToken);
     } catch (error) {
       console.error(error);
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
       setUser(null);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      await authAPI.logout();
+      localStorage.removeItem('isAuthenticated');
+      window.location.href = '/login';
     } catch (error) {
       console.error(error);
+      throw error;
     }
   };
 

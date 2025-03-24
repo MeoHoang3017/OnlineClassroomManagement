@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../contexts/AuthContext";
 const SidebarMenu = () => {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
-    const menuItems = [
-        { name: "Classroom Management", link: "/classroom", icon: "classroom" },
-        { name: "User Management", link: "/user", icon: "user" },
+    const { user } = useContext(AuthContext);
+    const menuItems = user ? [
+        (user.role === "Teacher") && { name: "Classroom Management", link: "/classroom", icon: "classroom" },
+        (user.role === "Admin") && { name: "User Management", link: "/user", icon: "user" },
         { name: "Class List", link: "/class-list", icon: "class-list" },
-        { name: "Lesson Management", link: "/lesson", icon: "lesson" },
-    ];
+        (user.role === "Teacher") && { name: "Lesson Management", link: "/lesson", icon: "lesson" },
+    ] : [{ name: "Class List", link: "/class-list", icon: "class-list" }];
 
+    console.log(menuItems);
     return (
         <div className="fixed bottom-4 left-4">
             {/* Menu Button */}
@@ -32,6 +35,7 @@ const SidebarMenu = () => {
                 >
                     <ul className="space-y-2">
                         {menuItems.map((item, index) => (
+                            item &&
                             <li
                                 key={index}
                                 className="p-2 text-gray-800 hover:bg-gray-100 rounded cursor-pointer"

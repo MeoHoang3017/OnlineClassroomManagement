@@ -4,9 +4,11 @@ const classroomSchema = new mongoose.Schema({
     classCode: { type: String, required: true, unique: true },
     name: { type: String, required: true },
     description: { type: String, required: true },
-    students: [{
-        type: String, ref: 'User'
-    }],
+    students: {
+        type: [String],
+        ref: 'User',
+        default: []
+    },
     createdBy: { type: String, ref: 'User', required: true },
     createdAt: { type: Date, default: Date.now },
 });

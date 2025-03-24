@@ -9,7 +9,6 @@ const helmet = require('helmet');
 const routes = require('./routes');
 const { logger, applyConfig } = require('./config');
 
-
 const app = express();
 app.use(cookieParser());
 
@@ -44,7 +43,7 @@ app.use('/api', routes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
-    console.error(err.message);
+    logger.error(err.stack);
     res.status(500).json({ error: 'Internal Server Error' });
 });
 

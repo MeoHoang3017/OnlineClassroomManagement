@@ -1,5 +1,6 @@
 import authorApi from "./baseAPI/authorAPI";
 import { User } from "../types/UserTypes";
+
 const userAPI = {
     fetchUsers: () => authorApi.get('/users/all').then(response => response.data),
     fetchUserById: (id: string) => authorApi.get(`/users/by/${id}`).then(response => response.data),

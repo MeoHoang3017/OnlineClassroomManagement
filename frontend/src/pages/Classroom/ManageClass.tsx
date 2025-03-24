@@ -1,34 +1,70 @@
 import { useEffect, useState } from 'react';
 import AddClassroomModal from './AddClass';
+import EditClassModal from './EditClass';
 import ConfirmDeleteModal from '../../components/common/ConfirmDeleteModal';
 import { Button } from '../../components/common/Button';
 import useClassroom from '../../hooks/useClassroom';
 import { useNavigate } from 'react-router-dom';
+import { Classroom } from '../../types/ClassroomTypes';
+import useNotification from '../../hooks/useNotification';
 const ClassroomManagement = () => {
-    const { classes, getAllClasses, createClass, deleteClass } = useClassroom();
+    const { classes, createClass, deleteClass, getClassesByTeacherId, updateClass } = useClassroom();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false);
+    const [editClass, setEditClass] = useState({} as Classroom);
     const [classToDelete, setClassToDelete] = useState<string | null>(null);
-    const navigate = useNavigate();
+    const [showSuccessMessage, showErrorMessage] = useNotification();
 
+    const navigate = useNavigate();
+    // const { user } = useContext(AuthContext);
     useEffect(() => {
-        getAllClasses();
+        getClassesByTeacherId();
     }, []);
 
     const addClassroom = (name: string, description: string, code: string) => {
-        createClass({ name, description, classCode: code });
-        setIsModalOpen(false);
+        try {
+            createClass({ name, description, classCode: code });
+            setIsModalOpen(false);
+            showSuccessMessage('Classroom created successfully!');
+        } catch (e) {
+            console.log(e);
+            showErrorMessage('Failed to create classroom. Please try again.');
+        }
     };
 
     const handleDeleteClass = () => {
-        if (classToDelete) {
-            deleteClass(classToDelete);
-            setClassToDelete(null);
+        try {
+            if (classToDelete) {
+                deleteClass(classToDelete);
+                setClassToDelete(null);
+                setDeleteModalOpen(false);
+                showSuccessMessage('Classroom deleted successfully!');
+            }
+        } catch (e) {
+            console.log(e);
+            showErrorMessage('Failed to delete classroom. Please try again.');
+        }
+    };
+
+    const handleOpenEditModal = (classroom: Classroom) => {
+        setEditClass(classroom);
+        setEditModalOpen(true);
+    };
+
+    const handleEditClass = async (updatedClassroom: Classroom) => {
+        try {
+            await updateClass(updatedClassroom._id, updatedClassroom);
+            setEditModalOpen(false);
+            showSuccessMessage('Classroom updated successfully!');
+        } catch (e) {
+            console.log(e);
+            showErrorMessage('Failed to update classroom. Please try again.');
         }
     };
 
     return (
-        <div className="p-6 max-w-3xl mx-auto">
+        <div className="p-6 mx-auto">
             <h1 className="text-3xl font-bold mb-6">Classroom Management</h1>
             <button
                 className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors mb-6"
@@ -41,6 +77,14 @@ const ClassroomManagement = () => {
                 onClose={() => setIsModalOpen(false)}
                 onAdd={addClassroom}
             />
+
+            <EditClassModal
+                isOpen={editModalOpen}
+                onClose={() => setEditModalOpen(false)}
+                classroom={editClass}
+                onSave={handleEditClass}
+            />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {classes.map((classroom) => (
                     <div
@@ -75,7 +119,7 @@ const ClassroomManagement = () => {
                             </Button>
                             <Button
                                 variant="primary"
-                                onClick={() => alert("Edit Classroom")}
+                                onClick={() => handleOpenEditModal(classroom)}
                             >
                                 Edit
                             </Button>

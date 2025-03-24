@@ -1,8 +1,7 @@
-const e = require('express');
 const { User } = require('../models/index');
 const { hashPassword, isMatch } = require('../utils/Hasher');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/JwtService');
-
+const logger = require('../config/logger');
 const register = async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -11,7 +10,6 @@ const register = async (req, res) => {
         }
         const existingUser = await User.findOne({ email: email });
         if (existingUser) {
-            console.log(existingUser);
             return res.status(400).json({ error: 'User with this email already exists' });
         }
         const existingUsername = await User.findOne({
@@ -24,10 +22,12 @@ const register = async (req, res) => {
         const user = await User.create({ username, email, password: hashedPassword, role: 'Student' });
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
+        logger.info(`User ${user.username} registered successfully`);
         res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 60 * 60 * 1000 });
         res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 7 * 24 * 60 * 60 * 1000 });
         res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
+        logger.error(`Error registering user: ${err.message}`);
         res.status(500).json({ error: err.message });
     }
 };
@@ -48,12 +48,13 @@ const login = async (req, res) => {
         }
         const accessToken = generateAccessToken(user);
         const refreshToken = generateRefreshToken(user);
-        console.log("AccessToken: ", accessToken);
-        console.log("RefreshToken: ", refreshToken)
+        logger.info(`User ${user.username} logged in`);
+
         res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 60 * 60 * 1000, expires: new Date(Date.now() + 60 * 60 * 1000) });
         res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 7 * 24 * 60 * 60 * 1000, expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) });
         res.status(200).json({ message: 'Login successful' });
     } catch (err) {
+        logger.error(`Error logging in user: ${err.message}`);
         res.status(500).json({ error: err.message });
     }
 };
@@ -66,7 +67,6 @@ const refreshToken = async (req, res) => {
         }
 
         const decoded = verifyRefreshToken(refreshToken);
-        console.log("Decoded: ", decoded);
 
         const user = await User.findById(decoded.id);
         if (!user) {
@@ -88,8 +88,15 @@ const refreshToken = async (req, res) => {
     }
 };
 
+const logout = (req, res) => {
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.status(200).json({ message: 'Logout successful' });
+};
+
 module.exports = {
     login,
     register,
     refreshToken,
+    logout
 };

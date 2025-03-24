@@ -13,7 +13,7 @@ const getAllClassrooms = async (req, res) => {
 //Get classroom by id
 const getClassroomById = async (req, res) => {
     try {
-        const classroom = await Classroom.findById(req.params.id);
+        const classroom = await Classroom.findById(req.params.id).populate('createdBy', 'username');
         res.status(200).json(classroom);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -48,7 +48,10 @@ const updateClassroom = async (req, res) => {
 //Delete a classroom
 const deleteClassroom = async (req, res) => {
     try {
-        await Classroom.findByIdAndDelete(req.params.id);
+        const classroom = await Classroom.findByIdAndDelete(req.params.id);
+        if (!classroom) {
+            return res.status(404).json({ error: 'Classroom not found' });
+        }
         res.status(200).json({ message: 'Classroom deleted successfully' });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -59,7 +62,24 @@ const deleteClassroom = async (req, res) => {
 const joinClassroom = async (req, res) => {
     try {
         const classroom = await Classroom.findById(req.params.id);
-        classroom.users.push(req.user.id);
+        if (!classroom) {
+            return res.status(404).json({ error: 'Classroom not found' });
+        }
+        classroom.students.push(req.user.id);
+        await classroom.save();
+        res.status(200).json(classroom);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+const leaveClassroom = async (req, res) => {
+    try {
+        const classroom = await Classroom.findById(req.params.id);
+        if (!classroom) {
+            return res.status(404).json({ error: 'Classroom not found' });
+        }
+        classroom.students.pull(req.user.id);
         await classroom.save();
         res.status(200).json(classroom);
     } catch (err) {
@@ -70,11 +90,35 @@ const joinClassroom = async (req, res) => {
 //View students in a classroom
 const viewStudentsInClassroom = async (req, res) => {
     try {
-        const classroom = await Classroom.findById(req.params.id).populate('users');
-        res.status(200).json(classroom.users);
+        const classroom = await Classroom.findById(req.params.id).populate('students');
+        res.status(200).json(classroom.students);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+
+//Get classrooms by user id
+const getClassroomsByTeacher = async (req, res) => {
+    try {
+        const classrooms = await Classroom.find({ createdBy: req.user.id }).populate('createdBy', 'username');
+        res.status(200).json(classrooms);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 }
 
-module.exports = { getAllClassrooms, getClassroomById, createClassroom, updateClassroom, deleteClassroom, joinClassroom, viewStudentsInClassroom };
+//Get classrooms by user id
+const getClassroomsByUser = async (req, res) => {
+    try {
+        const classrooms = await Classroom.find({ students: req.user.id });
+        res.status(200).json(classrooms);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = {
+    getAllClassrooms, getClassroomById, createClassroom, updateClassroom, deleteClassroom, joinClassroom,
+    viewStudentsInClassroom, getClassroomsByTeacher, getClassroomsByUser, leaveClassroom
+};

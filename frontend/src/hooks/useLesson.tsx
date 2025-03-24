@@ -63,7 +63,16 @@ const useLesson = () => {
         }
     }
 
-    return { lessons, loading, getAllLessons, getLesson, createLesson, updateLesson, deleteLesson };
+    const getLessonsByClass = async (classId: string) => {
+        try {
+            const lessons = await lessonAPI.getLessonByClassId(classId);
+            setLessons(lessons);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    return { lessons, loading, getAllLessons, getLesson, createLesson, updateLesson, deleteLesson, getLessonsByClass };
 };
 
 export default useLesson;

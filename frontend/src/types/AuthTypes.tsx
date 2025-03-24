@@ -10,7 +10,8 @@ interface RegisterRequest {
 }
 
 interface User {
-    id: number;
+    _id: string;
+    id: string;
     username: string;
     email: string;
     role: string;

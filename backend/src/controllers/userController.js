@@ -54,6 +54,7 @@ const getUserInfo = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         const response = {
+            id: user._id,
             username: user.username,
             fullname: user.fullname,
             email: user.email,

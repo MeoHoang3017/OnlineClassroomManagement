@@ -1,5 +1,7 @@
 import axios from 'axios';
+import AuthAPI from '../authAPI';
 
+// Create Axios instance
 const authorApi = axios.create({
     baseURL: 'http://localhost:3000/api',
     headers: {
@@ -19,10 +21,17 @@ authorApi.interceptors.request.use(config => {
 authorApi.interceptors.response.use(
     response => response,
     async error => {
-        if (error.response && error.response.status === 401) {
-            console.error('Unauthorized! Redirecting to login...');
-            window.location.href = '/login'; // Redirect to login page
+        const originalRequest = error.config;
+
+        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true; // Prevent infinite loops
+
+            const response = await AuthAPI.refreshToken();
+            if (response) return authorApi(originalRequest);
+            // If refresh fails, redirect to login
+            window.location.href = '/login';
         }
+
         return Promise.reject(error);
     }
 );

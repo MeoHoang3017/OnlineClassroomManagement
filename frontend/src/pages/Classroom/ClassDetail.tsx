@@ -1,54 +1,93 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Button } from '../../components/common/Button';
 import { Grid } from '@mui/material';
-const ClassDetail = () => {
-    // Placeholder data
-    const classData = {
-        classCode: 'CLASS001',
-        name: 'Introduction to Programming',
-        description: 'Learn the fundamentals of programming.',
-        image: 'https://gstatic.com/classroom/themes/img_graduation.jpg', // Replace with actual image URL
-        students: ['Student 1', 'Student 2', 'Student 3'],
-        createdBy: {
-            username: 'Instructor Name'
-        },
-        createdAt: '2025-03-07T10:15:00Z',
-    };
+import StudentList from '../User/StudentList';
+import { useParams } from 'react-router-dom';
+import useClassroom from '../../hooks/useClassroom';
+import { Classroom } from '../../types/ClassroomTypes';
+import { AuthContext } from '../../contexts/AuthContext';
+import LessonList from '../Lesson/LessonList';
 
+const ClassDetail = () => {
+    const [classroom, setClassroom] = React.useState<Classroom>({} as Classroom);
+    const { user } = useContext(AuthContext);
+    const { getClass, joinClass, leaveClass } = useClassroom();
+    const { classroomId } = useParams();
+    const [activeTab, setActiveTab] = useState<'lessons' | 'students'>('lessons'); // State for active tab
+    const baseImage = 'https://gstatic.com/classroom/themes/img_graduation.jpg';
+
+    useEffect(() => {
+        async function fetchData() {
+            const data = await getClass(classroomId as string);
+            setClassroom(data as Classroom);
+        }
+        fetchData();
+    }, [classroomId]);
+
+    const handleJoinClass = async (classId: string) => {
+        await joinClass(classId);
+        const data = await getClass(classroomId as string);
+        setClassroom(data as Classroom);
+    }
+
+    const handleLeaveClass = async (classId: string) => {
+        await leaveClass(classId);
+        const data = await getClass(classroomId as string);
+        setClassroom(data as Classroom);
+    }
     return (
         <Grid>
             <div className="p-6 col-end-3">
                 <div className="bg-white shadow-lg rounded-lg overflow-hidden">
                     <div className="relative">
-                        {classData.image && (
-                            <img
-                                src={classData.image}
-                                alt="Class Thumbnail"
-                                className="w-full h-64 object-cover"
-                            />
-                        )}
+                        <img
+                            src={classroom?.image || baseImage}
+                            alt="Class Thumbnail"
+                            className="w-full h-64 object-cover"
+                        />
                         <div className="absolute bottom-2 left-2 text-white bg-opacity-75 px-4 py-2">
-                            <h1 className="text-xl font-bold">{classData.name}</h1>
-                            <p className="text-lg">Class Code: {classData.classCode}</p>
+                            <h1 className="text-xl font-bold">{classroom.name}</h1>
+                            <p className="text-lg">Class Code: {classroom.classCode}</p>
                         </div>
                     </div>
 
                     <div className="p-6">
-                        <p className="text-gray-600"><span className="font-semibold">Description:</span> {classData.description}</p>
-                        <p className="text-gray-600"><span className="font-semibold">Created By:</span> {classData.createdBy?.username || 'Unknown'}</p>
-                        <p className="text-gray-600"><span className="font-semibold">Created At:</span> {new Date(classData.createdAt).toLocaleDateString()}</p>
-                        <p className="text-gray-600"><span className="font-semibold">Students:</span> {classData.students.length}</p>
+                        <p className="text-gray-600"><span className="font-semibold">Description:</span> {classroom.description}</p>
+                        <p className="text-gray-600"><span className="font-semibold">Created By:</span> {classroom.createdBy?.username || 'Unknown'}</p>
+                        <p className="text-gray-600"><span className="font-semibold">Created At:</span> {new Date(classroom.createdAt).toLocaleDateString()}</p>
+                        <p className="text-gray-600"><span className="font-semibold">Students:</span> {classroom.students?.length}</p>
                     </div>
                     <div className="p-4 bg-gray-100 border-t border-gray-200 flex justify-end gap-2">
-                        <Button variant="danger" onClick={() => { }}>Leave Class</Button>
-                        <Button variant="success" onClick={() => { }}>Join Class</Button>
+                        {user && classroom.students?.includes(user.id)
+                            ? <Button variant="danger" onClick={() => handleLeaveClass(classroomId as string)}>Leave Class</Button>
+                            : <Button variant="success" onClick={() => handleJoinClass(classroomId as string)}>Join Class</Button>
+                        }
                     </div>
                 </div>
             </div>
-            <div className='col-end-9'>
-                <div>
-                    <h1> Incomming Feature</h1>
+            <div className="col-end-9 p-6">
+                <div className="mb-4">
+                    {/* Tabs */}
+                    <button
+                        className={`px-4 py-2 font-semibold border-b-2 ${activeTab === 'lessons' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'}`}
+                        onClick={() => setActiveTab('lessons')}
+                    >
+                        Lessons
+                    </button>
+                    <button
+                        className={`px-4 py-2 font-semibold border-b-2 ${activeTab === 'students' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'}`}
+                        onClick={() => setActiveTab('students')}
+                    >
+                        Students
+                    </button>
                 </div>
+
+                {/* Tab Content */}
+                {activeTab === 'lessons' ? (
+                    <LessonList classId={classroomId || ''} />
+                ) : (
+                    <StudentList classId={classroomId || ''} /> // Display StudentList component here
+                )}
             </div>
         </Grid>
     );

@@ -1,11 +1,15 @@
 import { AuthProvider } from './contexts/AuthContext';
 import AppRoutes from './AppRoutes';
-function App() {
+import { NotyfProvider } from "./contexts/NotyfContext";
+import "notyf/notyf.min.css";
 
+function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <NotyfProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </NotyfProvider>
   )
 }
 
