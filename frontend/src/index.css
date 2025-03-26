@@ -6,3 +6,10 @@
     display: none;
   }
 }
+
+.pagination-zindex {
+  z-index: -1;
+  /* Lower z-index */
+  position: relative;
+  /* Ensure it does not escape its container */
+}

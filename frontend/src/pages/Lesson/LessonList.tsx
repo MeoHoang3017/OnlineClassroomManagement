@@ -1,34 +1,81 @@
 import React, { useContext, useEffect, useState } from "react";
 import useLesson from "../../hooks/useLesson";
+import useFile from "../../hooks/useFile";
 import AddLessonModal from "./AddLesson";
 import EditLessonModal from "./EditLessonModal";
 import { Button } from "../../components/common/Button";
+import Pagination from "@mui/material/Pagination"; // Import MUI Pagination
 import { Lesson } from "../../types/LessonTypes";
 import ConfirmDeleteModal from "../../components/common/ConfirmDeleteModal";
 import { AuthContext } from "../../contexts/AuthContext";
+
 type LessonListProps = {
     classId: string;
 };
 
 const LessonList: React.FC<LessonListProps> = ({ classId }) => {
     const { lessons, getLessonsByClass, createLesson, updateLesson, deleteLesson } = useLesson();
+    const { downloadFiles, uploadFiles } = useFile();
+
     const [searchTerm, setSearchTerm] = useState("");
+    const [page, setPage] = useState(1); // Current page
+    const rowsPerPage = 5; // Items per page
+    const [filteredLessons, setFilteredLessons] = useState<Lesson[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editLesson, setEditLesson] = useState<Lesson>({} as Lesson);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [lessonToDelete, setLessonToDelete] = useState<string | null>(null);
     const [editLessonOpen, setEditLessonOpen] = useState(false);
+    const [downloadingLessonId, setDownloadingLessonId] = useState<string | null>(null);
     const { user } = useContext(AuthContext);
+
     useEffect(() => {
         getLessonsByClass(classId);
     }, [classId]);
+
+    useEffect(() => {
+        const filtered = lessons.filter((lesson) =>
+            lesson.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        setFilteredLessons(filtered);
+    }, [lessons, searchTerm]);
+
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+        setPage(value);
+    };
 
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(event.target.value);
     };
 
-    const handleAddLesson = (name: string, description: string, thumbnailUrl: string, videoUrl: string) => {
-        createLesson({ name, description, thumbnailUrl, videoUrl, classId });
+    const handleDownloadFiles = async (lessonId: string) => {
+        try {
+            setDownloadingLessonId(lessonId);
+            const response = await downloadFiles(lessonId);
+            const url = window.URL.createObjectURL(response);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `lesson-${lessonId}-documents.zip`;
+            link.click();
+        } catch (error) {
+            console.error("Error downloading files:", error);
+        } finally {
+            setDownloadingLessonId(null);
+        }
+    };
+
+    const handleAddLesson = async (name: string, description: string, thumbnailUrl: string, videoUrl: string, files: File[]) => {
+        const lesson = await createLesson({
+            name,
+            description,
+            videoUrl,
+            classId,
+            thumbnailUrl,
+            documents: [],
+        });
+        if (lesson) {
+            await uploadFiles(lesson._id, files);
+        }
         setIsModalOpen(false);
         setEditLesson({} as Lesson);
     };
@@ -37,27 +84,30 @@ const LessonList: React.FC<LessonListProps> = ({ classId }) => {
         setEditLesson(lesson);
         setEditLessonOpen(true);
     };
-    const handleEditLesson = (id: string, name: string, description: string, videoUrl: string, thumbnailUrl: string) => {
-        updateLesson(id, {
-            name, description, videoUrl, thumbnailUrl, classId
+
+    const handleEditLesson = async (id: string, name: string, description: string, videoUrl: string, thumbnailUrl: string, documents: string[]) => {
+        await updateLesson(id, {
+            name,
+            description,
+            videoUrl,
+            thumbnailUrl,
+            classId,
+            documents,
         });
         setEditLesson({} as Lesson);
-        setIsModalOpen(false);
+        setEditLessonOpen(false);
     };
 
     const handleOpenDeleteModal = (id: string) => {
-        console.log(id);
         setDeleteModalOpen(true);
         setLessonToDelete(id);
-    }
-    const handleDeleteLesson = (id: string) => {
-        deleteLesson(id);
+    };
+
+    const handleDeleteLesson = async (id: string) => {
+        await deleteLesson(id);
         setDeleteModalOpen(false);
     };
 
-    const filteredLessons = lessons.filter((lesson) =>
-        lesson.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     return (
         <div className="p-6 mx-auto">
@@ -90,28 +140,54 @@ const LessonList: React.FC<LessonListProps> = ({ classId }) => {
                         <div className="p-4 w-2/3">
                             <h3 className="text-lg font-bold">{lesson.name}</h3>
                             <p className="text-sm text-gray-600 mb-2">{lesson.description}</p>
+
                             <a
-                                href={lesson.videoUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-500 hover:underline"
+                                onClick={() => handleDownloadFiles(lesson._id)}
+                                className={`text-blue-500 hover:underline cursor-pointer ${downloadingLessonId === lesson._id
+                                    ? "pointer-events-none text-gray-400"
+                                    : ""
+                                    }`}
                             >
-                                Watch Video
+                                {downloadingLessonId === lesson._id
+                                    ? "Downloading..."
+                                    : "Download Documents"}
                             </a>
+
                             <p className="text-xs text-gray-400 mt-2">
-                                Created by {lesson.createdBy?.username || "Unknown User"} on {new Date(lesson.createdAt).toLocaleDateString()}
+                                Created by {lesson.createdBy?.username || "Unknown User"} on{" "}
+                                {new Date(lesson.createdAt).toLocaleDateString()}
                             </p>
-                            <div className="flex justify-between mt-4">
-                                <Button onClick={() => handleOpenEditModal(lesson)} variant="secondary">
-                                    Edit
-                                </Button>
-                                <Button onClick={() => handleOpenDeleteModal(lesson._id)} variant="danger">
-                                    Delete
-                                </Button>
-                            </div>
+                            {user?.role === "Teacher" && (
+                                <div className="flex justify-between mt-4">
+                                    <Button
+                                        onClick={() => handleOpenEditModal(lesson)}
+                                        variant="secondary"
+                                    >
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        onClick={() => handleOpenDeleteModal(lesson._id)}
+                                        variant="danger"
+                                    >
+                                        Delete
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}
+            </div>
+
+            {/* MUI Pagination */}
+            <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+                <Pagination
+                    count={Math.ceil(filteredLessons.length / rowsPerPage)}
+                    page={page}
+                    onChange={handlePageChange}
+                    showFirstButton
+                    showLastButton
+                    className="pagination-zindex"
+                />
             </div>
 
             <AddLessonModal

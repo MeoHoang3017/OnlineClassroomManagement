@@ -10,8 +10,8 @@ interface AddLessonModalProps {
         description: string,
         videoUrl: string,
         thumbnailUrl: string,
-        files: File[]
-    ) => void;
+        documents: File[]
+    ) => Promise<void>; // Updated to handle async operation
 }
 
 const AddLessonModal = ({ isOpen, onClose, onAdd }: AddLessonModalProps) => {
@@ -20,10 +20,11 @@ const AddLessonModal = ({ isOpen, onClose, onAdd }: AddLessonModalProps) => {
     const [thumbnailUrl, setThumbnailUrl] = useState("");
     const [videoUrl, setVideoUrl] = useState("");
     const [files, setFiles] = useState<File[]>([]);
+    const [isLoading, setIsLoading] = useState(false); // Added loading state
 
     const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files) {
-            setFiles([...files, ...Array.from(event.target.files)]); // Append new files
+            setFiles([...files, ...Array.from(event.target.files)]);
         }
     };
 
@@ -31,6 +32,17 @@ const AddLessonModal = ({ isOpen, onClose, onAdd }: AddLessonModalProps) => {
         const updatedFiles = [...files];
         updatedFiles.splice(index, 1);
         setFiles(updatedFiles);
+    };
+
+    const handleAdd = async () => {
+        setIsLoading(true); // Start loading
+        try {
+            await onAdd(name, description, thumbnailUrl, videoUrl, files); // Wait for save process
+            setIsLoading(false); // End loading
+        } catch (error) {
+            console.error("Error adding lesson:", error);
+            setIsLoading(false); // End loading on error
+        }
     };
 
     return (
@@ -97,16 +109,11 @@ const AddLessonModal = ({ isOpen, onClose, onAdd }: AddLessonModalProps) => {
                 </p>
             </div>
             <div className="flex justify-end gap-2">
-                <Button onClick={onClose} variant="danger">
+                <Button onClick={onClose} variant="danger" disabled={isLoading}>
                     Cancel
                 </Button>
-                <Button
-                    onClick={() =>
-                        onAdd(name, description, thumbnailUrl, videoUrl, files)
-                    }
-                    variant="primary"
-                >
-                    Add
+                <Button onClick={handleAdd} variant="primary" disabled={isLoading}>
+                    {isLoading ? "Saving..." : "Add"} {/* Show loading text */}
                 </Button>
             </div>
         </Modal>

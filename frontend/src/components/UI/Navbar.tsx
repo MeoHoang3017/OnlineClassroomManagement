@@ -12,18 +12,12 @@ const Navbar = () => {
             <div className="container mx-auto flex justify-between items-center">
                 {/* Logo */}
                 <Link to="/" className="text-2xl font-bold text-blue-600">
-                    MyLogo
+                    ClassDoJ
                 </Link>
 
                 {/* Desktop Menu */}
                 {user ? (
                     <div className="hidden md:flex space-x-6 items-center">
-                        <Link to="/dashboard" className="hover:text-blue-500 transition">
-                            Dashboard
-                        </Link>
-                        <Link to="/profile" className="hover:text-blue-500 transition">
-                            Profile
-                        </Link>
                         <button
                             onClick={logout}
                             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"

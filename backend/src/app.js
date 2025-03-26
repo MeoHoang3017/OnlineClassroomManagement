@@ -21,8 +21,8 @@ app.use(morgan('dev'));
 app.use(helmet());
 
 // Middleware to parse JSON bodies with increased limit
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Configure session with connect-mongo
 app.use(

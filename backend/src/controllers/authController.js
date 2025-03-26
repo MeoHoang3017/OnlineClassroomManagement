@@ -1,7 +1,8 @@
-const { User } = require('../models/index');
+const { User, Otp } = require('../models/index');
 const { hashPassword, isMatch } = require('../utils/Hasher');
 const { generateAccessToken, generateRefreshToken, verifyRefreshToken } = require('../utils/JwtService');
 const logger = require('../config/logger');
+
 const register = async (req, res) => {
     try {
         const { username, email, password } = req.body;
@@ -88,6 +89,51 @@ const refreshToken = async (req, res) => {
     }
 };
 
+const forgotPassword = async (req, res) => {
+    const { email, otp, newPassword } = req.body;
+
+    try {
+        const user = await User.findOne({
+            email
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+
+        if (user.isBan) {
+            return res.status(400).json({ message: "User is banned" });
+        }
+
+        //Find token in OTP
+        const otpEntry = await Otp.findOne({ email: email, type: "forgot-password", isVerified: true });
+        if (!otpEntry) {
+            return res.status(404).json({ message: 'OTP not found' });
+        }
+
+        // Compare the plain token with the hashed token
+        const isTokenValid = isMatch(otp, otpEntry.otp);
+        if (!isTokenValid) {
+            return res.status(400).json({ message: "Invalid or expired token" });
+        } else {
+            await Otp.findByIdAndDelete(otpEntry.id);
+        }
+
+        // Hash the new password
+        const hashedPassword = await hashPassword(newPassword);
+
+        // Update user's password and clear the reset token
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successful" });
+    } catch (error) {
+        console.error("Error resetting password:", error);
+        res.status(500).json({ message: "Internal server error", error });
+    }
+};
+
+
 const logout = (req, res) => {
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
@@ -98,5 +144,6 @@ module.exports = {
     login,
     register,
     refreshToken,
-    logout
+    logout,
+    forgotPassword
 };

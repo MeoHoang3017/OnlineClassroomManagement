@@ -1,4 +1,5 @@
 const { User } = require('../models/index');
+const { hashPassword, isMatch } = require('../utils/Hasher');
 
 //Get all users
 const getUsers = async (req, res) => {
@@ -23,7 +24,18 @@ const getUserById = async (req, res) => {
 //Create a new user
 const createUser = async (req, res) => {
     try {
-        const user = await User.create(req.body);
+        const { username, fullname, email, phone, password, role } = req.body;
+        if (!username || !fullname || !email || !phone || !password || !role) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+        if (await User.findOne({ username })) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+        if (await User.findOne({ email })) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+        const hashedPassword = await hashPassword(password);
+        const user = await User.create({ username, fullname, email, phone, password: hashedPassword, role });
         res.status(201).json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -33,7 +45,18 @@ const createUser = async (req, res) => {
 //Update a user
 const updateUser = async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        const { username, fullname, email, phone, password, role } = req.body;
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (username) user.username = username;
+        if (fullname) user.fullname = fullname;
+        if (email) user.email = email;
+        if (phone) user.phone = phone;
+        if (password) user.password = await hashPassword(password);
+        if (role) user.role = role;
+        await user.save();
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ error: error.message });

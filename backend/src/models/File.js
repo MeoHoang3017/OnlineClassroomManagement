@@ -4,6 +4,7 @@ const fileSchema = new mongoose.Schema({
   filename: String,
   fileId: String,
   fileUrl: String,
+  lessonId: String,
   uploadedAt: { type: Date, default: Date.now },
 });
 

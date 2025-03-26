@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Trash2 } from "lucide-react"; // Import delete icon
 import useClassroom from "../../hooks/useClassroom";
+import { AuthContext } from "../../contexts/AuthContext"; // Import Auth context
 
 const studentsSample = [
     { email: "john.doe@example.com", username: "John Doe" },
@@ -15,6 +16,7 @@ interface StudentListProps {
 const StudentList = ({ classId }: StudentListProps) => {
     const [students, setStudents] = useState(studentsSample);
     const { viewStudentsInClass } = useClassroom();
+    const { user } = useContext(AuthContext); // Access user from AuthContext
 
     useEffect(() => {
         const fetchStudents = async () => {
@@ -42,7 +44,9 @@ const StudentList = ({ classId }: StudentListProps) => {
                         <tr className="border-b">
                             <th className="px-6 py-4 text-left font-medium">Username</th>
                             <th className="px-6 py-4 text-left font-medium">Email</th>
-                            <th className="px-6 py-4 text-center font-medium">Action</th>
+                            {user?.role === "Teacher" && ( // Only show "Action" column for teachers
+                                <th className="px-6 py-4 text-center font-medium">Action</th>
+                            )}
                         </tr>
                     </thead>
 
@@ -55,14 +59,16 @@ const StudentList = ({ classId }: StudentListProps) => {
                             >
                                 <td className="px-6 py-4 text-gray-800">{student.username}</td>
                                 <td className="px-6 py-4 text-gray-700">{student.email}</td>
-                                <td className="px-6 py-4 text-center">
-                                    <button
-                                        onClick={() => handleDelete(student.email)}
-                                        className="p-2 rounded-full text-red-500 hover:bg-red-100 transition"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
-                                </td>
+                                {user?.role === "Teacher" && ( // Only show delete button for teachers
+                                    <td className="px-6 py-4 text-center">
+                                        <button
+                                            onClick={() => handleDelete(student.email)}
+                                            className="p-2 rounded-full text-red-500 hover:bg-red-100 transition"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>

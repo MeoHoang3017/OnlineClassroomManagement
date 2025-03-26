@@ -4,11 +4,13 @@ import EditLessonModal from './EditLessonModal';
 import ConfirmDeleteModal from '../../components/common/ConfirmDeleteModal';
 import { Button } from '../../components/common/Button';
 import useLesson from '../../hooks/useLesson';
+import useFile from '../../hooks/useFile';
 import { useNavigate } from 'react-router-dom';
 import { Lesson } from '../../types/LessonTypes';
 
 const LessonManagement = () => {
     const { lessons, getAllLessons, createLesson, deleteLesson, updateLesson } = useLesson();
+    const { uploadFiles } = useFile();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editLesson, setEditLesson] = useState<Lesson>({} as Lesson);
     const [editModalOpen, setEditModalOpen] = useState(false);
@@ -21,8 +23,15 @@ const LessonManagement = () => {
         getAllLessons();
     }, []);
 
-    const addLesson = (name: string, description: string, videoUrl: string, thumbnailUrl: string) => {
-        createLesson({ name, description, videoUrl, classId, thumbnailUrl });
+    const addLesson = async (name: string, description: string, videoUrl: string, thumbnailUrl: string, files: File[]) => {
+        const lesson = await createLesson({
+            name, description, videoUrl, classId, thumbnailUrl,
+            documents: files.map((file) => file.name)
+        });
+        if (lesson) {
+            console.log('Uploading files...');
+            uploadFiles(lesson._id, files);
+        }
         setIsModalOpen(false);
     };
 
@@ -38,9 +47,9 @@ const LessonManagement = () => {
         setEditModalOpen(true);
     };
 
-    const handleEditLesson = (id: string, name: string, description: string, videoUrl: string, thumbnailUrl: string) => {
+    const handleEditLesson = (id: string, name: string, description: string, videoUrl: string, thumbnailUrl: string, documents: string[]) => {
         updateLesson(id, {
-            name, description, videoUrl, thumbnailUrl, classId
+            name, description, videoUrl, thumbnailUrl, classId, documents
         });
         setEditLesson({} as Lesson);
         setEditModalOpen(false);

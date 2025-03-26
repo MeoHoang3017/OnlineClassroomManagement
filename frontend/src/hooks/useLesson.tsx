@@ -1,29 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import lessonAPI from "../api/lessonAPI";
 import { Lesson, CreateLessonRequest } from "../types/LessonTypes";
 
 const useLesson = () => {
     const [lessons, setLessons] = useState<Lesson[]>([]);
     const [loading, setLoading] = useState(true);
-    useEffect(() => {
-        const fetchLessons = async () => {
-            try {
-                const lessons = await lessonAPI.getAllLessons();
-                setLessons(lessons);
-                setLoading(false);
-            } catch (error) {
-                console.error(error);
-            }
-        };
-        fetchLessons();
-    }, []);
 
     const getAllLessons = async () => {
         try {
+            setLoading(true);
             const lessons = await lessonAPI.getAllLessons();
             setLessons(lessons);
         } catch (error) {
             console.error(error);
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -36,12 +27,14 @@ const useLesson = () => {
         }
     }
 
-    const createLesson = async (form: CreateLessonRequest) => {
+    const createLesson = async (form: CreateLessonRequest): Promise<Lesson | undefined> => {
         try {
             const lesson = await lessonAPI.createLesson(form);
             setLessons([...lessons, lesson]);
+            return lesson;
         } catch (error) {
             console.error(error);
+            return undefined;
         }
     }
 

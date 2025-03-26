@@ -3,18 +3,22 @@ import useClassroom from '../../hooks/useClassroom';
 import { Button } from '../../components/common/Button';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Pagination } from '@mui/material'; // Import MUI Pagination
+
 const ListClass = () => {
     const { classes, getAllClasses, joinClass } = useClassroom(); // Assuming `joinClass` is a function in useClassroom hook
     const [filteredClasses, setFilteredClasses] = useState(classes);
     const [filter, setFilter] = useState(''); // For search by name
-    const [sortBy, setSortBy] = useState(''); // For sort by day created
+    const [sortBy, setSortBy] = useState(''); // For sorting
+    const [page, setPage] = useState(1); // Current page
+    const rowsPerPage = 5; // Number of items per page
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
+
     console.log(user);
     useEffect(() => {
         getAllClasses();
     }, []);
-
 
     useEffect(() => {
         // Filter and sort classes
@@ -45,6 +49,10 @@ const ListClass = () => {
         await getAllClasses();
     };
 
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
+        setPage(value); // Update the current page
+    };
+
     return (
         <div className="p-6 mx-auto">
             <h1 className="text-3xl font-bold mb-6">Classroom List</h1>
@@ -71,44 +79,55 @@ const ListClass = () => {
 
             {/* Classroom Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredClasses.map((classroom) => (
-                    <div
-                        key={classroom.id}
-                        className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
-                    >
-                        <div className="p-4" onClick={() => navigate(`/classroom/${classroom._id}`)}>
-                            <h2 className="text-xl font-semibold text-gray-800">
-                                {classroom.name}
-                            </h2>
-                            <p className="text-gray-600 mt-2">
-                                {classroom.description}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Students: {classroom.students.length}
-                            </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                                Created By: {classroom.createdBy
-                                    ? classroom.createdBy.username
-                                    : "Unknown"}
-                            </p>
+                {filteredClasses
+                    .slice((page - 1) * rowsPerPage, page * rowsPerPage) // Paginate items
+                    .map((classroom) => (
+                        <div
+                            key={classroom.id}
+                            className="bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+                        >
+                            <div className="p-4" onClick={() => navigate(`/classroom/${classroom._id}`)}>
+                                <h2 className="text-xl font-semibold text-gray-800">
+                                    {classroom.name}
+                                </h2>
+                                <p className="text-gray-600 mt-2">{classroom.description}</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Students: {classroom.students.length}
+                                </p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Created By: {classroom.createdBy
+                                        ? classroom.createdBy.username
+                                        : "Unknown"}
+                                </p>
+                            </div>
+                            <div className="p-4 bg-gray-100 border-t border-gray-200 flex justify-end">
+                                {user && classroom.students.includes(user.id) ? (
+                                    <span className="text-sm text-gray-500 p-2.5">
+                                        You are already a member of this classroom.
+                                    </span>
+                                ) : (
+                                    <Button
+                                        variant="success"
+                                        onClick={() => handleJoinClass(classroom._id)}
+                                    >
+                                        Join Class
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                        <div className="p-4 bg-gray-100 border-t border-gray-200 flex justify-end">
-                            {user && classroom.students.includes(user.id) ? (
-                                <span className="text-sm text-gray-500 p-2.5">
-                                    You are already a member of this classroom.
-                                </span>
-                            ) : (
+                    ))}
+            </div>
 
-                                <Button
-                                    variant="success"
-                                    onClick={() => handleJoinClass(classroom._id)}
-                                >
-                                    Join Class
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-                ))}
+            {/* Pagination */}
+            <div className="mt-6 flex justify-center">
+                <Pagination
+                    count={Math.ceil(filteredClasses.length / rowsPerPage)} // Calculate total pages
+                    page={page}
+                    onChange={handlePageChange}
+                    showFirstButton
+                    showLastButton
+                    className="pagination-zindex"
+                />
             </div>
         </div>
     );

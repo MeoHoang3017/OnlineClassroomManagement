@@ -1,4 +1,5 @@
 import { Classroom } from "./ClassroomTypes";
+import { Documents } from "./FileTypes";
 export interface Lesson {
     class: Classroom,
     _id: string,
@@ -11,7 +12,8 @@ export interface Lesson {
         _id: string,
         username: string
     },
-    createdAt: string
+    createdAt: string,
+    documents: Documents[]
 }
 
 export interface CreateLessonRequest {
@@ -20,4 +22,13 @@ export interface CreateLessonRequest {
     videoUrl: string,
     classId: string,
     thumbnailUrl: string,
+    documents: string[]
+}
+
+export interface UpdateLessonRequest {
+    name: string,
+    description: string,
+    videoUrl: string,
+    thumbnailUrl: string,
+    classId: string
 }

@@ -8,3 +8,12 @@ export interface User {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface CreateUser {
+    username: string;
+    fullname: string;
+    email: string;
+    phone: string;
+    password: string;
+    role: string;
+}

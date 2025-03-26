@@ -8,13 +8,11 @@ const SidebarMenu = () => {
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
     const menuItems = user ? [
-        (user.role === "Teacher") && { name: "Classroom Management", link: "/classroom", icon: "classroom" },
         (user.role === "Admin") && { name: "User Management", link: "/user", icon: "user" },
+        (user.role === "Teacher" || user.role === "Admin") && { name: "Classroom Management", link: "/classroom", icon: "classroom" },
         { name: "Class List", link: "/class-list", icon: "class-list" },
-        (user.role === "Teacher") && { name: "Lesson Management", link: "/lesson", icon: "lesson" },
     ] : [{ name: "Class List", link: "/class-list", icon: "class-list" }];
 
-    console.log(menuItems);
     return (
         <div className="fixed bottom-4 left-4">
             {/* Menu Button */}
@@ -31,7 +29,7 @@ const SidebarMenu = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute bottom-16 left-0 w-48 bg-white rounded-lg shadow-lg p-2"
+                    className="absolute bottom-16 left-0 w-52 bg-white rounded-lg shadow-lg p-2"
                 >
                     <ul className="space-y-2">
                         {menuItems.map((item, index) => (

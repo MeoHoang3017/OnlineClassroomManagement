@@ -1,6 +1,6 @@
 import { useState } from "react";
 import userAPI from "../api/userAPI";
-import { User } from "../types/UserTypes";
+import { User, CreateUser } from "../types/UserTypes";
 
 const useUser = () => {
     const [users, setUsers] = useState<User[]>([]);
@@ -28,7 +28,7 @@ const useUser = () => {
         }
     };
 
-    const createUser = async (user: User) => {
+    const createUser = async (user: CreateUser) => {
         try {
             const data = await userAPI.createUser(user);
             setUsers([...users, data]);
@@ -38,7 +38,7 @@ const useUser = () => {
         }
     };
 
-    const updateUser = async (id: string, user: User) => {
+    const updateUser = async (id: string, user: CreateUser) => {
         try {
             const data = await userAPI.updateUser(id, user);
             setUsers(users.map((u) => (u._id === id ? data : u)));
