@@ -54,7 +54,10 @@ const updateUser = async (req, res) => {
         if (fullname) user.fullname = fullname;
         if (email) user.email = email;
         if (phone) user.phone = phone;
-        if (password) user.password = await hashPassword(password);
+        if (password) {
+            if (user.password !== password)
+                user.password = await hashPassword(password);
+        }
         if (role) user.role = role;
         await user.save();
         res.status(200).json(user);
@@ -66,6 +69,9 @@ const updateUser = async (req, res) => {
 //Delete a user
 const deleteUser = async (req, res) => {
     try {
+        if (req.user.id === req.params.id) {
+            return res.status(403).json({ message: 'You cannot delete your own account' });
+        }
         await User.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {

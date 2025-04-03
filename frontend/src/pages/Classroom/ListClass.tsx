@@ -4,7 +4,7 @@ import { Button } from '../../components/common/Button';
 import { AuthContext } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Pagination } from '@mui/material'; // Import MUI Pagination
-
+import useApprove from '../../hooks/useApprove';
 const ListClass = () => {
     const { classes, getAllClasses, joinClass } = useClassroom(); // Assuming `joinClass` is a function in useClassroom hook
     const [filteredClasses, setFilteredClasses] = useState(classes);
@@ -14,8 +14,8 @@ const ListClass = () => {
     const rowsPerPage = 5; // Number of items per page
     const { user } = useContext(AuthContext);
     const navigate = useNavigate();
+    const { createApprovement } = useApprove();
 
-    console.log(user);
     useEffect(() => {
         getAllClasses();
     }, []);
@@ -101,7 +101,11 @@ const ListClass = () => {
                                 </p>
                             </div>
                             <div className="p-4 bg-gray-100 border-t border-gray-200 flex justify-end">
-                                {user && classroom.students.includes(user.id) ? (
+                                {user && user.id === classroom.createdBy._id ? (
+                                    <span className="text-sm text-gray-500 p-2.5">
+                                        You are the teacher of this classroom.
+                                    </span>
+                                ) : user && classroom.students.includes(user.id) ? (
                                     <span className="text-sm text-gray-500 p-2.5">
                                         You are already a member of this classroom.
                                     </span>
@@ -113,6 +117,7 @@ const ListClass = () => {
                                         Join Class
                                     </Button>
                                 )}
+
                             </div>
                         </div>
                     ))}

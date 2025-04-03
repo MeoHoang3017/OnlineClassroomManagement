@@ -8,6 +8,7 @@ import Pagination from "@mui/material/Pagination"; // Import MUI Pagination
 import { Lesson } from "../../types/LessonTypes";
 import ConfirmDeleteModal from "../../components/common/ConfirmDeleteModal";
 import { AuthContext } from "../../contexts/AuthContext";
+import useNotification from '../../hooks/useNotification';
 
 type LessonListProps = {
     classId: string;
@@ -16,6 +17,7 @@ type LessonListProps = {
 const LessonList: React.FC<LessonListProps> = ({ classId }) => {
     const { lessons, getLessonsByClass, createLesson, updateLesson, deleteLesson } = useLesson();
     const { downloadFiles, uploadFiles } = useFile();
+    const [showSuccessMessage, showErrorMessage] = useNotification();
 
     const [searchTerm, setSearchTerm] = useState("");
     const [page, setPage] = useState(1); // Current page
@@ -57,7 +59,10 @@ const LessonList: React.FC<LessonListProps> = ({ classId }) => {
             link.href = url;
             link.download = `lesson-${lessonId}-documents.zip`;
             link.click();
+
+            showSuccessMessage("Files downloaded successfully!");
         } catch (error) {
+            showErrorMessage("Error downloading files");
             console.error("Error downloading files:", error);
         } finally {
             setDownloadingLessonId(null);
@@ -65,19 +70,25 @@ const LessonList: React.FC<LessonListProps> = ({ classId }) => {
     };
 
     const handleAddLesson = async (name: string, description: string, thumbnailUrl: string, videoUrl: string, files: File[]) => {
-        const lesson = await createLesson({
-            name,
-            description,
-            videoUrl,
-            classId,
-            thumbnailUrl,
-            documents: [],
-        });
-        if (lesson) {
-            await uploadFiles(lesson._id, files);
+        try {
+            const lesson = await createLesson({
+                name,
+                description,
+                videoUrl,
+                classId,
+                thumbnailUrl,
+                documents: [],
+            });
+            if (lesson) {
+                await uploadFiles(lesson._id, files);
+            }
+            setIsModalOpen(false);
+            setEditLesson({} as Lesson);
+            showErrorMessage("Lesson created successfully!");
+        } catch (error) {
+            console.error("Error adding lesson:", error);
+            showErrorMessage("Error adding lesson");
         }
-        setIsModalOpen(false);
-        setEditLesson({} as Lesson);
     };
 
     const handleOpenEditModal = (lesson: Lesson) => {
@@ -86,16 +97,22 @@ const LessonList: React.FC<LessonListProps> = ({ classId }) => {
     };
 
     const handleEditLesson = async (id: string, name: string, description: string, videoUrl: string, thumbnailUrl: string, documents: string[]) => {
-        await updateLesson(id, {
-            name,
-            description,
-            videoUrl,
-            thumbnailUrl,
-            classId,
-            documents,
-        });
-        setEditLesson({} as Lesson);
-        setEditLessonOpen(false);
+        try {
+            await updateLesson(id, {
+                name,
+                description,
+                videoUrl,
+                thumbnailUrl,
+                classId,
+                documents,
+            });
+            setEditLesson({} as Lesson);
+            setEditLessonOpen(false);
+            showSuccessMessage("Lesson updated successfully!");
+        } catch (error) {
+            console.error("Error editing lesson:", error);
+            showErrorMessage("Error editing lesson");
+        }
     };
 
     const handleOpenDeleteModal = (id: string) => {
@@ -104,8 +121,14 @@ const LessonList: React.FC<LessonListProps> = ({ classId }) => {
     };
 
     const handleDeleteLesson = async (id: string) => {
-        await deleteLesson(id);
-        setDeleteModalOpen(false);
+        try {
+            await deleteLesson(id);
+            setDeleteModalOpen(false);
+            showSuccessMessage("Lesson deleted successfully!");
+        } catch (error) {
+            console.error("Error deleting lesson:", error);
+            showErrorMessage("Error deleting lesson");
+        }
     };
 
 

@@ -1,4 +1,4 @@
-const { Classroom } = require('../models/index');
+const { Classroom, Approvement } = require('../models/index');
 
 //Get all classrooms
 const getAllClassrooms = async (req, res) => {
@@ -65,7 +65,12 @@ const joinClassroom = async (req, res) => {
         if (!classroom) {
             return res.status(404).json({ error: 'Classroom not found' });
         }
-        classroom.students.push(req.user.id);
+        if (classroom.students.includes(req.user.id)) {
+            return res.status(400).json({ error: 'You are already in this classroom' });
+        }
+        const approvement = await Approvement.create({ userId: req.user.id, classId: req.params.id });
+        classroom.approvements.push(approvement._id);
+        console.log(approvement);
         await classroom.save();
         res.status(200).json(classroom);
     } catch (err) {

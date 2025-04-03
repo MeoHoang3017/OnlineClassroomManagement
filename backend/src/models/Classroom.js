@@ -9,6 +9,11 @@ const classroomSchema = new mongoose.Schema({
         ref: 'User',
         default: []
     },
+    approvements: {
+        type: [String],
+        ref: 'Approvement',
+        default: []
+    },
     createdBy: { type: String, ref: 'User', required: true },
     createdAt: { type: Date, default: Date.now },
 });

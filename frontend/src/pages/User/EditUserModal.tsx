@@ -38,13 +38,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, user, onClose, on
                 <h2 className="text-xl font-semibold mb-4">Edit User</h2>
                 <input
                     type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="block w-full mb-2 border border-gray-300 rounded px-3 py-2"
-                />
-                <input
-                    type="text"
                     placeholder="Full Name"
                     value={fullname}
                     onChange={(e) => setFullname(e.target.value)}

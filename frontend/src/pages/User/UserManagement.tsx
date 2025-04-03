@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Button } from "../../components/common/Button";
 import useUser from "../../hooks/useUser"; // Import the useUser hook
 import { CreateUser } from "../../types/UserTypes"; // Import the CreateUser interface
@@ -6,6 +6,7 @@ import AddUserModal from "./AddUserModal"; // Component for adding a user
 import EditUserModal from "./EditUserModal"; // Component for editing a user
 import useNotification from "../../hooks/useNotification";
 import ConfirmDeleteModal from "../../components/common/ConfirmDeleteModal";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const UserManagement = () => {
     const { users, fetchUsers, createUser, updateUser, deleteUser } = useUser(); // Use full hook capabilities
@@ -19,6 +20,7 @@ const UserManagement = () => {
     const [editUser, setEditUser] = useState<CreateUser | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
+    const { user } = useContext(AuthContext);
 
     useEffect(() => {
         fetchUsers(); // Fetch users on component mount
@@ -120,30 +122,35 @@ const UserManagement = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedUsers.map((user, index) => (
+                        {paginatedUsers.map((u, index) => (
                             <tr
-                                key={user._id}
+                                key={u._id}
                                 className={`${index % 2 === 0 ? "bg-gray-50" : "bg-white"
                                     } hover:bg-gray-100 transition duration-200`}
                             >
-                                <td className="px-6 py-4 text-sm text-gray-800">{user.username}</td>
-                                <td className="px-6 py-4 text-sm text-gray-800">{user.fullname}</td>
-                                <td className="px-6 py-4 text-sm text-gray-800">{user.phone}</td>
-                                <td className="px-6 py-4 text-sm text-gray-800">{user.email}</td>
-                                <td className="px-6 py-4 text-sm text-gray-800">{user.createdAt}</td>
+                                <td className="px-6 py-4 text-sm text-gray-800">{u.username}</td>
+                                <td className="px-6 py-4 text-sm text-gray-800">{u.fullname}</td>
+                                <td className="px-6 py-4 text-sm text-gray-800">{u.phone}</td>
+                                <td className="px-6 py-4 text-sm text-gray-800">{u.email}</td>
+                                <td className="px-6 py-4 text-sm text-gray-800">{u.createdAt}</td>
                                 <td className="px-6 py-4 flex space-x-2">
-                                    <Button
-                                        variant="success"
-                                        onClick={() => openEditModal(user)}
-                                    >
-                                        Edit
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        onClick={() => openDeleteModal(user._id)}
-                                    >
-                                        Delete
-                                    </Button>
+                                    {user && user.id === u._id && (
+                                        <Button
+                                            variant="success"
+                                            onClick={() => openEditModal(u)}
+                                        >
+                                            Edit
+                                        </Button>
+                                    )}
+                                    {user && user.id !== u._id && (
+                                        <Button
+                                            variant="danger"
+                                            onClick={() => openDeleteModal(u._id)}
+                                        >
+                                            Delete
+                                        </Button>
+                                    )}
+
                                 </td>
                             </tr>
                         ))}

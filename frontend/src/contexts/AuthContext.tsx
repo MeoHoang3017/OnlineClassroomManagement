@@ -39,7 +39,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userData = await userAPI.getCurrentUser();
       setUser(userData);
       localStorage.setItem('isAuthenticated', '1');
-      window.location.href = '/';
+      if (userData.role === 'Teacher') {
+        window.location.href = '/classroom';
+      } if (userData.role === 'Student') {
+        window.location.href = '/class-list';
+      } else {
+        window.location.href = '/user';
+      }
     } catch (error) {
       console.error(error);
       throw error;

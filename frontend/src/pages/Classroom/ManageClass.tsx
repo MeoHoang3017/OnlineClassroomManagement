@@ -68,11 +68,18 @@ const ClassroomManagement = () => {
 
     const handleDeleteClass = () => {
         try {
+            const classDeleteStudent = classes.find((classroom) => classroom._id === classToDelete);
+            if (classDeleteStudent && classDeleteStudent.students.length > 0) {
+                showErrorMessage('Cannot delete classroom with students enrolled. Please remove students first.');
+                return;
+            }
             if (classToDelete) {
                 deleteClass(classToDelete);
                 setClassToDelete(null);
                 setDeleteModalOpen(false);
                 showSuccessMessage('Classroom deleted successfully!');
+            } else {
+                throw new Error('Classroom ID is missing');
             }
         } catch (e) {
             console.log(e);

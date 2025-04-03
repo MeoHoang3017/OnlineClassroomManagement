@@ -7,13 +7,14 @@ import useClassroom from '../../hooks/useClassroom';
 import { Classroom } from '../../types/ClassroomTypes';
 import { AuthContext } from '../../contexts/AuthContext';
 import LessonList from '../Lesson/LessonList';
+import ApprovementList from '../ApprovementList';
 
 const ClassDetail = () => {
     const [classroom, setClassroom] = React.useState<Classroom>({} as Classroom);
     const { user } = useContext(AuthContext);
     const { getClass, joinClass, leaveClass } = useClassroom();
     const { classroomId } = useParams();
-    const [activeTab, setActiveTab] = useState<'lessons' | 'students'>('lessons'); // State for active tab
+    const [activeTab, setActiveTab] = useState<'lessons' | 'students' | 'approvements'>('lessons'); // Added 'approvements' tab
     const baseImage = 'https://gstatic.com/classroom/themes/img_graduation.jpg';
 
     useEffect(() => {
@@ -28,13 +29,14 @@ const ClassDetail = () => {
         await joinClass(classId);
         const data = await getClass(classroomId as string);
         setClassroom(data as Classroom);
-    }
+    };
 
     const handleLeaveClass = async (classId: string) => {
         await leaveClass(classId);
         const data = await getClass(classroomId as string);
         setClassroom(data as Classroom);
-    }
+    };
+
     return (
         <Grid>
             <div className="p-6 col-end-3">
@@ -58,10 +60,15 @@ const ClassDetail = () => {
                         <p className="text-gray-600"><span className="font-semibold">Students:</span> {classroom.students?.length}</p>
                     </div>
                     <div className="p-4 bg-gray-100 border-t border-gray-200 flex justify-end gap-2">
-                        {user && classroom.students?.includes(user.id)
-                            ? <Button variant="danger" onClick={() => handleLeaveClass(classroomId as string)}>Leave Class</Button>
-                            : <Button variant="success" onClick={() => handleJoinClass(classroomId as string)}>Join Class</Button>
-                        }
+                        {user && user.id === classroom?.createdBy?._id ? (
+                            <span className="text-sm text-gray-500 p-2.5">
+                                You are the teacher of this classroom.
+                            </span>
+                        ) : user && classroom.students?.includes(user.id) ? (
+                            <Button variant="danger" onClick={() => handleLeaveClass(classroomId as string)}>Leave Class</Button>
+                        ) : (
+                            <Button variant="success" onClick={() => handleJoinClass(classroomId as string)}>Join Class</Button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -74,19 +81,36 @@ const ClassDetail = () => {
                     >
                         Lessons
                     </button>
-                    <button
-                        className={`px-4 py-2 font-semibold border-b-2 ${activeTab === 'students' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'}`}
-                        onClick={() => setActiveTab('students')}
-                    >
-                        Students
-                    </button>
+
+                    {(user && (user.role === 'Teacher' || user.role === 'Admin' || classroom.students?.includes(user.id))) && (
+                        <button
+                            className={`px-4 py-2 font-semibold border-b-2 ${activeTab === 'students' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'}`}
+                            onClick={() => setActiveTab('students')}
+                        >
+                            Students
+                        </button>
+                    )}
+
+                    {user && user.role === 'Teacher' && (
+                        <button
+                            className={`px-4 py-2 font-semibold border-b-2 ${activeTab === 'approvements' ? 'border-blue-500 text-blue-500' : 'border-transparent text-gray-500'}`}
+                            onClick={() => setActiveTab('approvements')}
+                        >
+                            Approvements
+                        </button>
+                    )}
                 </div>
 
-                {/* Tab Content */}
-                {activeTab === 'lessons' ? (
-                    <LessonList classId={classroomId || ''} />
+                {user && (user.id === classroom.createdBy?._id || classroom.students?.includes(user.id)) ? (
+                    <div>
+                        {activeTab === 'lessons' && <LessonList classId={classroomId || ''} />}
+                        {activeTab === 'students' && <StudentList classId={classroomId || ''} />}
+                        {activeTab === 'approvements' && <ApprovementList classId={classroomId || ''} />}
+                    </div>
                 ) : (
-                    <StudentList classId={classroomId || ''} /> // Display StudentList component here
+                    <div className="shadow-lg rounded-lg p-6 text-red-500">
+                        {user && user.role === 'Teacher' ? 'You are not the teacher of this classroom.' : 'You are not a member of this classroom. Join the class to see the content.'}
+                    </div>
                 )}
             </div>
         </Grid>
